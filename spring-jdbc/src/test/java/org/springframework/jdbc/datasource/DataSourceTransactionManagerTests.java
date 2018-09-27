@@ -112,7 +112,8 @@ public class DataSourceTransactionManagerTests  {
 		doTestTransactionCommitRestoringAutoCommit(false, true, true);
 	}
 
-	private void doTestTransactionCommitRestoringAutoCommit(
+	private void
+	doTestTransactionCommitRestoringAutoCommit(
 			boolean autoCommit, boolean lazyConnection, final boolean createStatement) throws Exception {
 
 		if (lazyConnection) {
