@@ -48,7 +48,28 @@ import org.springframework.core.PriorityOrdered;
  * @since 4.0
  */
 class PostProcessorRegistrationDelegate {
-
+	/**
+	 *  按照优先级调用BeanFactoryPostProcessor
+	 *
+	 * 	 ApplicationContext的beanFactoryPostProcessors
+	 * 	 BeanFactory中类型为BeanDefinitionRegistryPostProcessor的BeanDefinition
+	 *
+	 * 	1. 调用ApplicationContext的beanFactoryPostProcessors中类型为BeanDefinitionRegistryPostProcessor的postProcessBeanDefinitionRegistry
+	 *
+	 * 	2. 调用BeanFactory的beanDefinition中类型为BeanDefinitionRegistryPostProcessor的优先级为PriorityOrdered的postProcessBeanDefinitionRegistry
+	 * 	3. 调用BeanFactory的beanDefinition中类型为BeanDefinitionRegistryPostProcessor的优先级为Ordered的postProcessBeanDefinitionRegistry
+	 * 	4. 调用BeanFactory的beanDefinition中类型为BeanDefinitionRegistryPostProcessor的优先级为默认的postProcessBeanDefinitionRegistry
+	 *
+	 * 	5. 调用ApplicationContext的beanFactoryPostProcessors中类型不为BeanDefinitionRegistryPostProcessor的postProcessBeanFactory
+	 * 	6. 调用ApplicationContext的beanFactoryPostProcessors中类型为BeanDefinitionRegistryPostProcessor的postProcessBeanFactory
+	 *
+	 * 	7. 调用BeanFactory的beanDefinition中类型为BeanFactoryPostProcessor的优先级为PriorityOrdered的postProcessBeanFactory
+	 * 	8. 调用BeanFactory的beanDefinition中类型为BeanFactoryPostProcessor的优先级为Ordered的postProcessBeanFactory
+	 * 	9. 调用BeanFactory的beanDefinition中类型为BeanFactoryPostProcessor的优先级为默认的postProcessBeanFactory
+	 *
+	 * @param beanFactory   ApplicationContext的beanFactoryPostProcessors
+	 * @param beanFactoryPostProcessors
+	 */
 	public static void invokeBeanFactoryPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
@@ -59,13 +80,15 @@ class PostProcessorRegistrationDelegate {
 			BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
 			//常规的BeanFactoryPostProcessor
 			List<BeanFactoryPostProcessor> regularPostProcessors = new LinkedList<BeanFactoryPostProcessor>();
-			//BeanDefinitionRegistryPostProcessor
+			//注册BeanDefinition的BeanFactoryPostProcess(BeanDefinitionRegistryPostProcessor)
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new LinkedList<BeanDefinitionRegistryPostProcessor>();
 
+			//分离ApplicationContext的beanFactoryPostProcessors（）
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
 					BeanDefinitionRegistryPostProcessor registryProcessor =
 							(BeanDefinitionRegistryPostProcessor) postProcessor;
+					// 如果是BeanDefinitionRegistryPostProcessor先注册BeanDefinition
 					registryProcessor.postProcessBeanDefinitionRegistry(registry);
 					registryProcessors.add(registryProcessor);
 				}
@@ -83,7 +106,6 @@ class PostProcessorRegistrationDelegate {
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
-			//org.springframework.context.annotation.internalConfigurationAnnotationProcessor
 			for (String ppName : postProcessorNames) {
 				if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 					currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
