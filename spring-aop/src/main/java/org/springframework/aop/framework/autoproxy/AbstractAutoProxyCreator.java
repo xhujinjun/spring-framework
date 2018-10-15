@@ -255,10 +255,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Suppresses unnecessary default instantiation of the target bean:
 		// The TargetSource will handle target instances in a custom fashion.
 		if (beanName != null) {
+			//获取目标对象
 			TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
 			if (targetSource != null) {
 				this.targetSourcedBeans.add(beanName);
+				//获取适用与该bean的Advisors
 				Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+				//创建代理类(这里才是精彩的地方)
 				Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
 				this.proxyTypes.put(cacheKey, proxy.getClass());
 				return proxy;
@@ -268,6 +271,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return null;
 	}
 
+	//bean实例化后处理
 	@Override
 	public boolean postProcessAfterInstantiation(Object bean, String beanName) {
 		return true;
@@ -462,7 +466,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
-
+		//创建Proxy对象
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 
