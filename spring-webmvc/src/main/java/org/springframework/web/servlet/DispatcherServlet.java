@@ -966,11 +966,13 @@ public class DispatcherServlet extends FrameworkServlet {
 				// Actually invoke the handler.
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
+				//如果是异步处理就直接返回
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
 
 				applyDefaultViewName(processedRequest, mv);
+				// Apply postHandle methods of registered interceptors.
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -1038,6 +1040,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Did the handler return a view to render?
 		if (mv != null && !mv.wasCleared()) {
+			//渲染
 			render(mv, request, response);
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);

@@ -913,6 +913,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 				ExtendedModelMap implicitModel, ServletWebRequest webRequest) throws Exception {
 
 			ResponseStatus responseStatus = AnnotatedElementUtils.findMergedAnnotation(handlerMethod, ResponseStatus.class);
+			//错误处理
 			if (responseStatus != null) {
 				HttpStatus statusCode = responseStatus.code();
 				String reason = responseStatus.reason();
@@ -929,7 +930,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 				this.responseArgumentUsed = true;
 			}
 
-			// Invoke custom resolvers if present...
+			// Invoke custom resolvers if present... 自定义解析器
 			if (customModelAndViewResolvers != null) {
 				for (ModelAndViewResolver mavResolver : customModelAndViewResolvers) {
 					ModelAndView mav = mavResolver.resolveModelAndView(
@@ -940,22 +941,27 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 				}
 			}
 
+            //如果返回值类型为HttpEntity
 			if (returnValue instanceof HttpEntity) {
 				handleHttpEntityResponse((HttpEntity<?>) returnValue, webRequest);
 				return null;
 			}
+			//如果handlerMethod上有ResponseBody注解
 			else if (AnnotationUtils.findAnnotation(handlerMethod, ResponseBody.class) != null) {
 				handleResponseBody(returnValue, webRequest);
 				return null;
 			}
+			//如果返回值类型为ModelAndView
 			else if (returnValue instanceof ModelAndView) {
 				ModelAndView mav = (ModelAndView) returnValue;
 				mav.getModelMap().mergeAttributes(implicitModel);
 				return mav;
 			}
+			//如果返回值类型为Model
 			else if (returnValue instanceof Model) {
 				return new ModelAndView().addAllObjects(implicitModel).addAllObjects(((Model) returnValue).asMap());
 			}
+			//如果返回值类型为View
 			else if (returnValue instanceof View) {
 				return new ModelAndView((View) returnValue).addAllObjects(implicitModel);
 			}
@@ -963,12 +969,15 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 				addReturnValueAsModelAttribute(handlerMethod, handlerType, returnValue, implicitModel);
 				return new ModelAndView().addAllObjects(implicitModel);
 			}
+			//如果返回值类型为Map
 			else if (returnValue instanceof Map) {
 				return new ModelAndView().addAllObjects(implicitModel).addAllObjects((Map<String, ?>) returnValue);
 			}
+			//如果返回值类型为String
 			else if (returnValue instanceof String) {
 				return new ModelAndView((String) returnValue).addAllObjects(implicitModel);
 			}
+			//如果返回值为null
 			else if (returnValue == null) {
 				// Either returned null or was 'void' return.
 				if (this.responseArgumentUsed || webRequest.isNotModified()) {
@@ -979,11 +988,13 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 					return new ModelAndView().addAllObjects(implicitModel);
 				}
 			}
+			//如果返回值类型为基本类型
 			else if (!BeanUtils.isSimpleProperty(returnValue.getClass())) {
 				// Assume a single model attribute...
 				addReturnValueAsModelAttribute(handlerMethod, handlerType, returnValue, implicitModel);
 				return new ModelAndView().addAllObjects(implicitModel);
 			}
+			//其它情况抛出异常
 			else {
 				throw new IllegalArgumentException("Invalid handler method return value: " + returnValue);
 			}
@@ -1037,6 +1048,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 				for (MediaType acceptedMediaType : acceptedMediaTypes) {
 					for (HttpMessageConverter messageConverter : getMessageConverters()) {
 						if (messageConverter.canWrite(returnValueType, acceptedMediaType)) {
+						    //使用messageConverter来回写响应
 							messageConverter.write(returnValue, acceptedMediaType, outputMessage);
 							if (logger.isDebugEnabled()) {
 								MediaType contentType = outputMessage.getHeaders().getContentType();

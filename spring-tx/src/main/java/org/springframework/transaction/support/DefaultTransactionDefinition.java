@@ -51,14 +51,27 @@ public class DefaultTransactionDefinition implements TransactionDefinition, Seri
 	/** Constants instance for TransactionDefinition */
 	static final Constants constants = new Constants(TransactionDefinition.class);
 
+	/**
+	 * 缺省的事务传播行为:
+	 */
 	private int propagationBehavior = PROPAGATION_REQUIRED;
 
+	/**
+	 * 缺省的事务隔离级别：
+	 */
 	private int isolationLevel = ISOLATION_DEFAULT;
-
+	/**
+	 * 缺省的事务超时
+	 */
 	private int timeout = TIMEOUT_DEFAULT;
-
+	/**
+	 * 缺省只读事务: false
+	 */
 	private boolean readOnly = false;
 
+	/**
+	 * 事务名称：only for transaction monitor
+	 */
 	private String name;
 
 

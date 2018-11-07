@@ -76,22 +76,40 @@ import org.springframework.util.Assert;
 public abstract class TransactionSynchronizationManager {
 
 	private static final Log logger = LogFactory.getLog(TransactionSynchronizationManager.class);
-
+	/**
+	 * 事务资源 线程本地变量
+	 *
+	 * key:    dataSource
+	 * value:  ConnectionHolder
+	 */
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<Map<Object, Object>>("Transactional resources");
-
+	/**
+	 * 事务同步器 线程本地变量
+	 *    支持多个事务同步器，如：
+	 *    jdbcTemplate会使用DatasourceUtil来注入了ConnectionSynchronization
+	 *    SqlSessionInterceptor使用SqlSessionUtil来注入来SqlSessionSynchronization
+	 */
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<Set<TransactionSynchronization>>("Transaction synchronizations");
-
+	/**
+	 * 当前事务名称 线程本地变量
+	 */
 	private static final ThreadLocal<String> currentTransactionName =
 			new NamedThreadLocal<String>("Current transaction name");
-
+	/**
+	 * 当前事务只读状态 线程本地变量
+	 */
 	private static final ThreadLocal<Boolean> currentTransactionReadOnly =
 			new NamedThreadLocal<Boolean>("Current transaction read-only status");
-
+	/**
+	 * 当前事务隔离级别 线程本地变量
+	 */
 	private static final ThreadLocal<Integer> currentTransactionIsolationLevel =
 			new NamedThreadLocal<Integer>("Current transaction isolation level");
-
+	/**
+	 * 当前事务激活标识 线程本地变量
+	 */
 	private static final ThreadLocal<Boolean> actualTransactionActive =
 			new NamedThreadLocal<Boolean>("Actual transaction active");
 

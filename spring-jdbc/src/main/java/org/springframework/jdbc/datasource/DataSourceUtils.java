@@ -401,6 +401,7 @@ public abstract class DataSourceUtils {
 
 
 	/**
+	 * 数据库连接(资源)同步器
 	 * Callback for resource cleanup at the end of a non-native JDBC transaction
 	 * (e.g. when participating in a JtaTransactionManager transaction).
 	 * @see org.springframework.transaction.jta.JtaTransactionManager
@@ -426,6 +427,9 @@ public abstract class DataSourceUtils {
 			return this.order;
 		}
 
+		/**
+		 * 挂起同步器
+		 */
 		@Override
 		public void suspend() {
 			if (this.holderActive) {
@@ -435,12 +439,16 @@ public abstract class DataSourceUtils {
 					// a handle to it anymore. We will fetch a fresh Connection if the
 					// application accesses the ConnectionHolder again after resume,
 					// assuming that it will participate in the same transaction.
+					//关闭连接
 					releaseConnection(this.connectionHolder.getConnection(), this.dataSource);
 					this.connectionHolder.setConnection(null);
 				}
 			}
 		}
 
+		/**
+		 * 唤醒同步器
+		 */
 		@Override
 		public void resume() {
 			if (this.holderActive) {

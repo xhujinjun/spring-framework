@@ -120,16 +120,20 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 		}
 	}
 
-
+	/**
+	 * 编程式事务的入口
+	 */
 	@Override
 	public <T> T execute(TransactionCallback<T> action) throws TransactionException {
 		if (this.transactionManager instanceof CallbackPreferringPlatformTransactionManager) {
 			return ((CallbackPreferringPlatformTransactionManager) this.transactionManager).execute(this, action);
 		}
 		else {
+		    //1. 根据事务定义(主要是事务的传播机制)来获取事务(创建事务/获取当前事务/新建事务)
 			TransactionStatus status = this.transactionManager.getTransaction(this);
 			T result;
 			try {
+			    //2. 执行事务单元(里面有可能还有事务),如果有就先执行1
 				result = action.doInTransaction(status);
 			}
 			catch (RuntimeException ex) {
@@ -147,6 +151,7 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 				rollbackOnException(status, ex);
 				throw new UndeclaredThrowableException(ex, "TransactionCallback threw undeclared checked exception");
 			}
+			//3. 提交事务
 			this.transactionManager.commit(status);
 			return result;
 		}

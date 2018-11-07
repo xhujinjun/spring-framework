@@ -140,18 +140,28 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 
 	private List<HandlerMethodArgumentResolver> customArgumentResolvers;
 
+	/**
+	 * HandlerMethod的参数解析器
+	 */
 	private HandlerMethodArgumentResolverComposite argumentResolvers;
-
+	/**
+	 * HandlerMethod参数的绑定
+	 */
 	private HandlerMethodArgumentResolverComposite initBinderArgumentResolvers;
 
 	private List<HandlerMethodReturnValueHandler> customReturnValueHandlers;
-
+	/**
+	 * HandlerMethod返回值解析器
+	 */
 	private HandlerMethodReturnValueHandlerComposite returnValueHandlers;
 
 	private List<ModelAndViewResolver> modelAndViewResolvers;
 
 	private ContentNegotiationManager contentNegotiationManager = new ContentNegotiationManager();
 
+	/**
+	 * HttpMessage转换器
+	 */
 	private List<HttpMessageConverter<?>> messageConverters;
 
 	private List<Object> requestResponseBodyAdvice = new ArrayList<Object>();
@@ -817,9 +827,13 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
 
 			ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
+			//设置参数解析器
 			invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
+			//设置返回值解析器
 			invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
+			//设置数据绑定工厂
 			invocableMethod.setDataBinderFactory(binderFactory);
+			//设置参数名称发现器
 			invocableMethod.setParameterNameDiscoverer(this.parameterNameDiscoverer);
 
 			ModelAndViewContainer mavContainer = new ModelAndViewContainer();
@@ -846,11 +860,12 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 				invocableMethod = invocableMethod.wrapConcurrentResult(result);
 			}
 
+			//**调用方法并处理**
 			invocableMethod.invokeAndHandle(webRequest, mavContainer);
 			if (asyncManager.isConcurrentHandlingStarted()) {
 				return null;
 			}
-
+			//获取Modle和View
 			return getModelAndView(mavContainer, modelFactory, webRequest);
 		}
 		finally {
