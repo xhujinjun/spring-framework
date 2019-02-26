@@ -341,8 +341,8 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Override
 	public final TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException {
-	    //获取事务对象(如:DataSourceTransactionObject,HibernateTransactionObject etc)
-        //如果是第一次 ConnectionHolder就是null
+	    //根据资源对象获取线程变量上的事务对象(如:DataSourceTransactionObject,HibernateTransactionObject etc)
+        //如果是第一次 事务对象的ConnectionHolder就是null
 		Object transaction = doGetTransaction();
 
 		// Cache debug flag to avoid repeated checks.
@@ -389,7 +389,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				DefaultTransactionStatus status = newTransactionStatus(
 						definition, transaction, true, newSynchronization, debugEnabled, suspendedResources);
 				//开启事务
-                // 1.创建数据库连接
+                // 1. 创建数据库连接
                 // 2. 初始化数据库连接
                 // 3. 绑定资源ConnectionHold到线程变量
 				doBegin(transaction, definition);
@@ -440,13 +440,16 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					definition, null, false, newSynchronization, debugEnabled, suspendedResources);
 		}
 
+		//事务隔离级别是新建
 		if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
 			if (debugEnabled) {
 				logger.debug("Suspending current transaction, creating new transaction with name [" +
 						definition.getName() + "]");
 			}
+			//挂起事务
 			SuspendedResourcesHolder suspendedResources = suspend(transaction);
 			try {
+			    //开启新事务
 				boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
 				DefaultTransactionStatus status = newTransactionStatus(
 						definition, transaction, true, newSynchronization, debugEnabled, suspendedResources);

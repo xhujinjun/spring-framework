@@ -253,7 +253,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
         Connection con = null;
 
         try {
-            //从数据源里面获取连接并组装tConnectionHolder
+            //从数据源里面获取连接并组装ConnectionHolder
             if (!txObject.hasConnectionHolder() ||
                     txObject.getConnectionHolder().isSynchronizedWithTransaction()) {
                 Connection newCon = this.dataSource.getConnection();
@@ -283,7 +283,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
             }
             //预处理事务连接(如果是只读就执行SET TRANSACTION READ ONLY)
             prepareTransactionalConnection(con, definition);
-            //设置连接开启了事务
+            //设置数据库连接开启了事务
             txObject.getConnectionHolder().setTransactionActive(true);
 
             int timeout = determineTimeout(definition);
