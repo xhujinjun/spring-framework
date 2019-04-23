@@ -512,28 +512,34 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
-			//为refresh context做前期准备工作：
-			// 1. 设置开始时间
-			// 2. 开启标识，
-			// 3. any placeholder property初始化属性占位符等
+			//1. 为refresh context做前期准备工作：
+			// 1) 设置开始时间
+			// 2) 开启标识(active:true,closed:false)
+			// 3) Initialize any placeholder property sources in the context environment
+			// 4)
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
-			//刷新内部bean factory
+			// 2. 刷新内部bean factory
 			//初始化BeanFactory，是整个refresh()方法的核心，其中完成了配置文件的加载、解析、注册，后面会专门详细说 。
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
-			//准备bean factory
+			// 3. 为上下文准备标准的bean factory
+			//  1)为bean factory准备类加载器
+			// 2）为bean factory 注册bean表达式解析
+			//3） bean属性编辑器注册
+			//bean-post-process
+			//.....
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
-				//后处理bean factory
+				//后处理bean factory(允许子类修改上下文的标准bean facotory)
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				//执行bean factory的post processors
+				//十分重要：执行bean factory的post processors
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -702,11 +708,20 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+
+		//调用bean facoty post processors: 即会调用标准bean facoty的post process也会调用bean difition的post process
+		//主要的PostProcessor有：
+		// internalConfigurationAnnotationProcessor (ConfigurationClassPostProcessor)
+		// internalAutowiredAnnotationProcessor（AutowiredAnnotationBeanPostProcessor）
+		// internalRequiredAnnotationProcessor（RequiredAnnotationBeanPostProcessor）
+		// internalCommonAnnotationProcessor(CommonAnnotationBeanPostProcessor)
+		// internalPersistenceAnnotationProcessor(PersistenceAnnotationBeanPostProcessor)
+		// internalEventListenerProcessor(EventListenerMethodProcessor)
+		// internalEventListenerFactory(DefaultEventListenerFactory)
 		//ConfigurationWarningsPostProcessor
 		//CachingMetadataReaderFactoryPostProcessor
 		//PropertySourceOrderingPostProcessor
-
-		//ConfigurationClassPostProcessor
+		//ConfigurationClassPostProcessor()
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
@@ -887,6 +902,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		//实例化bean
 		beanFactory.preInstantiateSingletons();
 	}
 

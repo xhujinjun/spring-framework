@@ -468,7 +468,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			//InstantiationAwareBeanPostProcessor
+			// ¥¥ 重要 ¥¥
+			// 这里会返回代理对象
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -479,6 +480,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					"BeanPostProcessor before instantiation of bean failed", ex);
 		}
 
+		// ¥¥ 重要 ¥¥
+		// 真实创建对象
 		Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Finished creating instance of bean '" + beanName + "'");
@@ -487,27 +490,30 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Actually create the specified bean. Pre-creation processing has already happened
-	 * at this point, e.g. checking {@code postProcessBeforeInstantiation} callbacks.
-	 * <p>Differentiates between default bean instantiation, use of a
-	 * factory method, and autowiring a constructor.
 	 *
 	 * 1 实例化(Instantiate)Bean
 	 * 	factory method, constructor autowiring, or simple instantiation
 	 * 	 相当于new Bean()
-	 * 2 设置属性(populate properties)
-	 * 3 调用BeanNameAware的setBeanName()方法
-	 * 4 调用BeanFactoryAware的setBeanFactory()方法
-	 * 5 调用BeanPostProcessor的
-	 * 6 调用InitializBean的afterPropertiesSet()方法
-	 * 7 调用定制的初始化方法
-	 * 8 调用BeanPostProcessor的
+	 * 2. MergedBeanDefinitionPostProcessor处理
+	 * 3. 初始化：设置属性(populate properties)
+	 *           调用BeanNameAware的setBeanName()方法
+	 *           调用BeanFactoryAware的setBeanFactory()方法
+	 *           调用BeanPostProcessor的
+	 *           调用InitializBean的afterPropertiesSet()方法
+	 *           调用定制的初始化方法
+	 *           调用BeanPostProcessor的
 	 *
 	 *
 	 * 等待容器关闭
 	 *
 	 * 10 DisposableBean的destroy()
 	 * 11 Call customer destroy-method
+	 *
+	 *
+	 * Actually create the specified bean. Pre-creation processing has already happened
+	 * at this point, e.g. checking {@code postProcessBeforeInstantiation} callbacks.
+	 * <p>Differentiates between default bean instantiation, use of a
+	 * factory method, and autowiring a constructor.
 	 * @param beanName the name of the bean
 	 * @param mbd the merged bean definition for the bean
 	 * @param args explicit arguments to use for constructor or factory method invocation
@@ -535,6 +541,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		mbd.resolvedTargetType = beanType;
 
 		// Allow post-processors to modify the merged bean definition.
+		//MergedBeanDefinitionPostProcessor
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
@@ -1665,7 +1672,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
-			////调用beanPostProcessor的postProcessAfterInitialization方法
+			//调用beanPostProcessor的postProcessAfterInitialization方法
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 		return wrappedBean;
