@@ -4,7 +4,7 @@
 Bean的前世今生
 出生: <bean>...</bean>
 幼年: BeanDefinition bean的接口定义
-小学: GenericBeanDefinition 基础的Bean映射
+小学: GenericBeanDefinition 基础的Bean映射 （AnnotatedGenericBeanDefinition，ScannedGenericBeanDefinition）
 中学: RootBeanDefinition 拥有依赖关系等附加信息的bean
 大学: BeanWrapper 内部用
 社会: Object 你的bean

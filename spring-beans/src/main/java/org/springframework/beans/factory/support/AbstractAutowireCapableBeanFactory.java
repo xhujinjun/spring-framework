@@ -468,7 +468,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			// ¥¥ 重要 ¥¥
+			// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+			//     ¥¥  重要 ¥¥
+			// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 			// 这里会返回代理对象
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
@@ -480,7 +482,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					"BeanPostProcessor before instantiation of bean failed", ex);
 		}
 
-		// ¥¥ 重要 ¥¥
+		// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		//     ¥¥  重要 ¥¥
+		// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 		// 真实创建对象
 		Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 		if (logger.isDebugEnabled()) {

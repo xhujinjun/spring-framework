@@ -509,7 +509,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * 刷新context
 	 */
 	@Override
-	public void refresh() throws BeansException, IllegalStateException {
+	public void  refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
 			//1. 为refresh context做前期准备工作：
@@ -520,8 +520,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
-			// 2. 刷新内部bean factory
-			//初始化BeanFactory，是整个refresh()方法的核心，其中完成了配置文件的加载、解析、注册，后面会专门详细说 。
+            //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+            //     ¥¥重要¥¥
+            //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+			// 2. 刷新内部bean factory(看是GenericApplicationContext还是AbstractRefreshableApplicationContext)
+			//如果是GenericApplicationContext直接返回DefaultListableBeanFactory
+            //如果是AbstractRefreshableApplicationContext，完成了配置文件的加载、解析、注册，后面会专门详细说 。
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
@@ -535,11 +539,17 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+                //     ¥¥扩展¥¥: 允许不同的上下文对bean factory的不同处理
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 				//后处理bean factory(允许子类修改上下文的标准bean facotory)
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				//十分重要：执行bean factory的post processors
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+                //     ¥¥重要¥¥
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+				//执行bean factory的post processors
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -553,12 +563,19 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+                //     ¥¥扩展¥¥: 允许不同的上下文
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 				onRefresh();
 
 				// Check for listener beans and register them.
 				registerListeners();
 
-				// Instantiate all remaining (non-lazy-init) singletons. 实例化所有剩下的（非懒加载）的单例
+				// Instantiate all remaining (non-lazy-init) singletons.
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+                //     ¥¥重要¥¥
+                //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+                //实例化所有剩下的（非懒加载）的单例
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -631,6 +648,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		//刷新bean factory
 		refreshBeanFactory();
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (logger.isDebugEnabled()) {

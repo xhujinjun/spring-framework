@@ -54,6 +54,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 
 
 	/**
+	 * 会先调用父类（GenericApplicationContext）的构造函数，来指定beanFactory为DefaultListableBeanFactory
 	 * Create a new AnnotationConfigApplicationContext that needs to be populated
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
