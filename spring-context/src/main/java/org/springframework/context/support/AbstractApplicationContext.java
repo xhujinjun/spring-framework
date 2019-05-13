@@ -506,7 +506,24 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * 刷新context
+	 * 启动/重启context
+	 * 1. 预刷新
+	 * 2. 刷新
+	 *    获取刷新的bean factory: 创建bean factory(如果是refreshApplicationcontext可以loadBeanDifition)
+	 *    准备bean factory: bean factory通用的原材料
+	 *    后处理bean factory: 子类扩展特殊的
+	 *    调用bean-factory-post-processor: bean-difinition-post-processor可以进行注册bean,后处理bean factory
+	 *
+	 *    注册bean post processor
+	 *    initMessageSource
+	 *    注册事件传播器
+	 *
+	 *    子类特定刷新
+	 *
+	 *    加入监听器
+	 *    完成bean factory初始化
+	 *
+	 * 3. 完成刷新
 	 */
 	@Override
 	public void  refresh() throws BeansException, IllegalStateException {
@@ -516,24 +533,26 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			// 1) 设置开始时间
 			// 2) 开启标识(active:true,closed:false)
 			// 3) Initialize any placeholder property sources in the context environment
-			// 4)
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
             //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-            //     ¥¥重要¥¥
+            //     ¥¥重要¥¥ ： 让子类刷新内部的bean factory并返回
             //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-			// 2. 刷新内部bean factory(看是GenericApplicationContext还是AbstractRefreshableApplicationContext)
+			// 2. 刷新子类的bean factory(看是GenericApplicationContext还是AbstractRefreshableApplicationContext)
 			//如果是GenericApplicationContext直接返回DefaultListableBeanFactory
-            //如果是AbstractRefreshableApplicationContext，完成了配置文件的加载、解析、注册，后面会专门详细说 。
+            //如果是AbstractRefreshableApplicationContext，完成了配置文件的加载、解析、注册 。
+
+			//上下文中的bean factory有两种生成方式，一种是指定默认的bean factory后期通过register来注册bean definition
+			//一种是通过refreshBeanFactory来创建bean factory并加载bean definition
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
-			// 3. 为上下文准备标准的bean factory
-			//  1)为bean factory准备类加载器
-			// 2）为bean factory 注册bean表达式解析
-			//3） bean属性编辑器注册
-			//bean-post-process
+			// 3. 准备bean factory（为容器配置ClassLoader,PropertyEditor,BeanPostProcessor等，从而为容器的启动做好了必要的准备工作）
+			//  1) 为bean factory准备类加载器
+			//  2）为bean factory 注册bean表达式解析
+			//  3）bean属性编辑器注册
+			//  4} 加入 bean-post-processor
 			//.....
 			prepareBeanFactory(beanFactory);
 
@@ -542,14 +561,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
                 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                 //     ¥¥扩展¥¥: 允许不同的上下文对bean factory的不同处理
                 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-				//后处理bean factory(允许子类修改上下文的标准bean facotory)
+				//后处理bean factory(允许子类修改上下文的标准bean factory)
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
                 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-                //     ¥¥重要¥¥
+                //     ¥¥重要¥¥ 执行bean factory的post processors
                 //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-				//执行bean factory的post processors
+				//Bean-factory-post-processor来源有：构建AnnotationConfigApplicationContext或<context:annotation-config/>
+				//除此之外，spring-boot初始化上下文或监听的时候也会创建部分Bean-factory-post-processor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -648,7 +668,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
-		//刷新bean factory
+		//如果是RefreshableApplicationContext则刷新bean factory: 如ClassPathXmlApplicationContext
+		//如果是GenericApplicationContext则直接返回BeanFactory
 		refreshBeanFactory();
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (logger.isDebugEnabled()) {
@@ -727,19 +748,19 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
 
-		//调用bean facoty post processors: 即会调用标准bean facoty的post process也会调用bean difition的post process
+		//调用bean-factory post processors: 既会调用标准bean factory的post process也会调用bean definition的post process
 		//主要的PostProcessor有：
-		// internalConfigurationAnnotationProcessor (ConfigurationClassPostProcessor)
-		// internalAutowiredAnnotationProcessor（AutowiredAnnotationBeanPostProcessor）
-		// internalRequiredAnnotationProcessor（RequiredAnnotationBeanPostProcessor）
-		// internalCommonAnnotationProcessor(CommonAnnotationBeanPostProcessor)
+		// internalConfigurationAnnotationProcessor: ConfigurationClassPostProcessor(BeanFactoryPostProcessor,处理@Configu注解)
+		// internalAutowiredAnnotationProcessor: AutowiredAnnotationBeanPostProcessor(BeanPostProcessor,用来自动装配)
+		// internalRequiredAnnotationProcessor: RequiredAnnotationBeanPostProcessor(BeanPostProcessor,用来处理Required注解)
+		// internalCommonAnnotationProcessor: CommonAnnotationBeanPostProcessor(BeanPostProcessor,用来处理普通注解)
 		// internalPersistenceAnnotationProcessor(PersistenceAnnotationBeanPostProcessor)
 		// internalEventListenerProcessor(EventListenerMethodProcessor)
 		// internalEventListenerFactory(DefaultEventListenerFactory)
+
 		//ConfigurationWarningsPostProcessor
 		//CachingMetadataReaderFactoryPostProcessor
 		//PropertySourceOrderingPostProcessor
-		//ConfigurationClassPostProcessor()
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
@@ -920,6 +941,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		//     ¥¥重要¥¥
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 		//实例化bean
 		beanFactory.preInstantiateSingletons();
 	}

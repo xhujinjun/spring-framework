@@ -228,6 +228,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				}
 				try {
 					// create the singleton
+					//$$$$$$$$$$$$$$$$$
+					//重要：创建单例
+					//$$$$$$$$$$$$$$$$$
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}

@@ -68,8 +68,8 @@ class PostProcessorRegistrationDelegate {
 	 * 	8. 调用BeanFactory的beanDefinition中类型为BeanFactoryPostProcessor的优先级为Ordered的postProcessBeanFactory
 	 * 	9. 调用BeanFactory的beanDefinition中类型为BeanFactoryPostProcessor的优先级为默认的postProcessBeanFactory
 	 *
-	 * @param beanFactory   ApplicationContext的beanFactoryPostProcessors
-	 * @param beanFactoryPostProcessors
+	 * @param beanFactory
+	 * @param beanFactoryPostProcessors  ApplicationContext的beanFactoryPostProcessors
 	 */
 	public static void invokeBeanFactoryPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
@@ -86,13 +86,15 @@ class PostProcessorRegistrationDelegate {
 
 			//分离ApplicationContext的beanFactoryPostProcessors（）
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
+				// 如果是BeanDefinitionRegistryPostProcessor先调用postProcessBeanDefinitionRegistry方法，然后分离
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
 					BeanDefinitionRegistryPostProcessor registryProcessor =
 							(BeanDefinitionRegistryPostProcessor) postProcessor;
-					// 如果是BeanDefinitionRegistryPostProcessor先注册BeanDefinition
+					//调用上下文中的bean-factory-post-processor的postProcessBeanDefinitionRegistry方法
 					registryProcessor.postProcessBeanDefinitionRegistry(registry);
 					registryProcessors.add(registryProcessor);
 				}
+				//如果是常规BeanFactoryPostProcessor, 直接分离
 				else {
 					regularPostProcessors.add(postProcessor);
 				}

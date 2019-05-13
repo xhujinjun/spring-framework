@@ -94,7 +94,9 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 		else {
 			this.exceptionHandler = new SimpleAsyncUncaughtExceptionHandler();
 		}
+		//构建advice(拦截器)
 		this.advice = buildAdvice(executor, this.exceptionHandler);
+		//构建pointcut（）
 		this.pointcut = buildPointcut(asyncAnnotationTypes);
 	}
 
@@ -156,7 +158,9 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 	protected Pointcut buildPointcut(Set<Class<? extends Annotation>> asyncAnnotationTypes) {
 		ComposablePointcut result = null;
 		for (Class<? extends Annotation> asyncAnnotationType : asyncAnnotationTypes) {
+			//查找类上面的注解
 			Pointcut cpc = new AnnotationMatchingPointcut(asyncAnnotationType, true);
+			//查找方法上面的注解
 			Pointcut mpc = AnnotationMatchingPointcut.forMethodAnnotation(asyncAnnotationType);
 			if (result == null) {
 				result = new ComposablePointcut(cpc);
@@ -164,6 +168,7 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 			else {
 				result.union(cpc);
 			}
+			//联盟类和方法上的注解
 			result = result.union(mpc);
 		}
 		return result;

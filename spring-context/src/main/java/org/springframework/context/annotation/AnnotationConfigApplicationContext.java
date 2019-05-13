@@ -54,12 +54,19 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 
 
 	/**
-	 * 会先调用父类（GenericApplicationContext）的构造函数，来指定beanFactory为DefaultListableBeanFactory
+	 * 仅仅是创建了一个AnnotationConfigApplicationContext(默认使用DefaultListableBeanFactory)
+	 * 需要用户手动调用register方法和refresh方法
 	 * Create a new AnnotationConfigApplicationContext that needs to be populated
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		// $$  重要 $$
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		// 1.会先调用父类（GenericApplicationContext）的构造函数，来指定beanFactory为DefaultListableBeanFactory
+		// 2. BeanDefinition 加载器 里面会注册所有注解后处理器到上下文
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+		//3. BeanDefinition扫描器，用来扫描@Component/@Repository/@Service/@Controller
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -74,6 +81,9 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	}
 
 	/**
+	 * 创建一个AnnotationConfigApplicationContext, 并且通过给定的类来推导bean definitions，并自动refreshing下上文。
+	 *
+	 * spring-boot也采用这种机制
 	 * Create a new AnnotationConfigApplicationContext, deriving bean definitions
 	 * from the given annotated classes and automatically refreshing the context.
 	 * @param annotatedClasses one or more annotated classes,
