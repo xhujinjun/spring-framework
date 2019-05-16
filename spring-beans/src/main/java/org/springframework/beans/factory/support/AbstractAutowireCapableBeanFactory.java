@@ -561,6 +561,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		//$$$$重要：spring循环依赖解决方案$$$$$
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		//
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -568,6 +572,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.debug("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			//放入三级缓存
 			addSingletonFactory(beanName, new ObjectFactory<Object>() {
 				@Override
 				public Object getObject() throws BeansException {
@@ -577,7 +582,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Initialize the bean instance.
-
 		Object exposedObject = bean;
 		try {
 			//3. 属性注入:
@@ -603,8 +607,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						mbd.getResourceDescription(), beanName, "Initialization of bean failed", ex);
 			}
 		}
-
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		//$$$$重要：spring循环依赖解决方案$$$$$
+		//$$$$$$$$$$$$$$$$$$$$$$$$$$$
 		if (earlySingletonExposure) {
+			//本质上是从一级和二级缓存中获取bean
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
 				if (exposedObject == bean) {
@@ -1739,7 +1746,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				((InitializingBean) bean).afterPropertiesSet();
 			}
 		}
-		//自定义初始化方法
+		//自定义初始化方法(@PostConstruct)
 		if (mbd != null) {
 			String initMethodName = mbd.getInitMethodName();
 			if (initMethodName != null && !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&

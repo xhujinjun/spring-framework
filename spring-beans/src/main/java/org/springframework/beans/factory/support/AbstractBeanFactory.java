@@ -241,7 +241,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object bean;
 
 		// Eagerly check singleton cache for manually registered singletons.
-		//急切地检查手动注册单例单缓存。
+		//急切地检查手动注册单例单缓存:
+        // 1. 从一级缓存（singletonObjects）中获取
+        // 2. 如果Set<String> singletonsCurrentlyInCreation存在， 则从spring二级缓存（earlySingletonObjects）中获取bean
+        // 3. 如果允许循环依赖， 则从三级缓存（singletonFactories）中获取
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isDebugEnabled()) {
@@ -253,12 +256,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.debug("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
+			//直接返回bean实例
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
 		else {
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
+			//检查是否是循环依赖
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
@@ -278,6 +283,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
+			//Set<String> alreadyCreated列表中加入beanName
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}
